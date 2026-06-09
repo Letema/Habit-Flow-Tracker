@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Flow — Tracker</title>
+</head>
+<body style="background-color: #ffffff; margin: 0; padding: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a;">
+
+    <!-- Navigation Bar Link-Backs -->
+    <nav style="display: flex; justify-content: center; gap: 25px; padding: 20px; background: #ffffff; border-bottom: 1px solid #e2e8f0;">
+        <a href="index.html" style="color: #64748b; text-decoration: none; font-weight: 500; font-size: 0.95rem;">← Back to Portfolio</a>
+    </nav>
+
+    <!-- Main Workspace Dashboard View -->
+    <main style="max-width: 600px; margin: 0 auto; padding: 50px 20px;">
+        
+        <!-- Application App Header -->
+        <div style="margin-bottom: 35px; text-align: center;">
+            <span style="color: #16a34a; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px;">Daily Consistency Engine</span>
+            <h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.5px;">Habit Flow Tracker</h1>
+            <div style="width: 45px; height: 4px; background: linear-gradient(90deg, #0284c7, #0369a1); margin: 12px auto 0 auto; border-radius: 2px;"></div>
+        </div>
+
+        <!-- Input Wrapper Control Container -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);">
+            <div style="display: flex; gap: 12px;">
+                <input type="text" id="habitInput" placeholder="Enter a new habit (e.g., Coding 1 Hour)..." style="flex: 1; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; color: #0f172a; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                <button id="addHabitBtn" style="background: linear-gradient(90deg, #0284c7, #0369a1); color: #ffffff; border: none; padding: 0 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.1s ease;">Add Habit</button>
+            </div>
+        </div>
+
+        <!-- Active Tracker Target List DOM Anchor Container -->
+        <div id="habitList" style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Your habits will automatically populate inside here through JavaScript! -->
+        </div>
+
+    </main>
+        <!-- Habit Tracker Core JavaScript Logic -->
+    <script>
+        // 1. Grab HTML DOM elements
+        const habitInput = document.getElementById('habitInput');
+        const addHabitBtn = document.getElementById('addHabitBtn');
+        const habitList = document.getElementById('habitList');
+
+        // 2. Initialize array from localStorage, or empty if it's the first time opening the app
+        let habits = JSON.parse(localStorage.getItem('myPortfolioHabits')) || [];
+
+        // 3. Render function to draw our elements onto the screen layout
+        function renderHabits() {
+            habitList.innerHTML = ''; // Empty out current list first
+
+            if (habits.length === 0) {
+                habitList.innerHTML = `
+                    <p style="text-align: center; color: #94a3b8; font-size: 0.95rem; margin-top: 20px;">
+                        No habits tracked yet. Start typing above to build consistency!
+                    </p>
+                `;
+                return;
+            }
+
+            // Loop through each tracked item and build the UI card element
+            habits.forEach((habit, index) => {
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 16px 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+                `;
+
+                card.innerHTML = `
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #0f172a;">${habit.name}</h3>
+                        <p style="margin: 4px 0 0 0; font-size: 0.85rem; font-weight: 600; color: #16a34a;">
+                            🔥 Current Streak: ${habit.streak} days
+                        </p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <!-- Complete Button -->
+                        <button onclick="incrementStreak(${index})" style="background: #16a34a; color: #ffffff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer;">
+                            ✓ Log Day
+                        </button>
+                        
+                        <!-- Delete Button -->
+                        <button onclick="deleteHabit(${index})" style="background: transparent; color: #ef4444; border: 1px solid #fee2e2; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+                            Delete
+                        </button>
+                    </div>
+                `;
+                habitList.appendChild(card);
+            });
+        }
+
+        // 4. Action: Add a brand new habit to our data matrix
+        function addHabit() {
+            const habitName = habitInput.value.trim();
+            
+            if (habitName === '') {
+                alert('Please type a habit title first!');
+                return;
+            }
+
+            // Create our data layout object
+            const newHabit = {
+                name: habitName,
+                streak: 0
+            };
+
+            habits.push(newHabit);
+            saveDataAndRefresh();
+            habitInput.value = ''; // Reset input text bar
+        }
+
+        // 5. Action: Step up consistency counter matrix tracking values
+        function incrementStreak(index) {
+            habits[index].streak += 1;
+            saveDataAndRefresh();
+        }
+
+        // 6. Action: Splice target record block away permanently
+        function deleteHabit(index) {
+            if (confirm('Are you sure you want to delete this habit?')) {
+                habits.splice(index, 1);
+                saveDataAndRefresh();
+            }
+        }
+
+        // 7. Helper utility to push layout models to hardware storage and reload UI tracking arrays
+        function saveDataAndRefresh() {
+            localStorage.setItem('myPortfolioHabits', JSON.stringify(habits));
+            renderHabits();
+        }
+
+        // 8. Event wiring
+        addHabitBtn.addEventListener('click', addHabit);
+        
+        // Also allow adding habit by pressing the Enter key on keyboard
+        habitInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addHabit();
+            }
+        });
+
+        // Run render layout baseline immediately on initialization execution cycle
+        renderHabits();
+    </script>
+
+
+</body>
+</html>
